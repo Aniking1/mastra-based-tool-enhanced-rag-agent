@@ -1,77 +1,93 @@
-import { pathToFileURL } from 'node:url';
-import { Agent } from '@mastra/core/agent';
-import { TaskSignalProvider } from '@mastra/core/signals';
-import { askUserTool, webFetchTool, webSearchTool } from '@mastra/core/tools';
-import { LocalFilesystem, LocalSandbox, WORKSPACE_TOOLS, Workspace } from '@mastra/core/workspace';
-import { Memory } from '@mastra/memory';
-import { startScheduleTool, stopScheduleTool } from '../tools/schedule-tools';
+import { Agent } from "@mastra/core/agent";
+import { Memory } from "@mastra/memory";
+import { LibSQLStore, LibSQLVector } from "@mastra/libsql";
+import { fastembed } from "@mastra/fastembed";
 
-const workspacePath = 'workspace';
+import {
+  getFlightBooking,
+  getHotelBooking,
+  convertCurrency,
+} from "../tools/travel-tools";
 
-const workspace = new Workspace({
-  id: 'agent-workspace',
-  name: 'Agent Workspace',
-  filesystem: new LocalFilesystem({
-    basePath: workspacePath,
+import {
+  queryInternalKnowledge,
+} from "../tools/rag-tool";
+
+import { model } from "../model";
+
+const memory = new Memory({
+  storage: new LibSQLStore({
+    id: "travel-assistant-memory",
+    url: "file:./memory.db",
   }),
-  sandbox: new LocalSandbox({
-    workingDirectory: workspacePath,
+
+  vector: new LibSQLVector({
+    id: "travel-assistant-memory-vector",
+    url: "file:./memory-vector.db",
   }),
-  tools: {
-    [WORKSPACE_TOOLS.FILESYSTEM.WRITE_FILE]: {
-      requireReadBeforeWrite: true,
+
+  embedder: fastembed,
+
+  options: {
+    lastMessages: 20,
+
+    semanticRecall: {
+      topK: 3,
+      messageRange: 2,
+      scope: "thread",
     },
-    [WORKSPACE_TOOLS.FILESYSTEM.EDIT_FILE]: {
-      requireReadBeforeWrite: true,
-    },
-    [WORKSPACE_TOOLS.FILESYSTEM.DELETE]: {
-      requireApproval: true,
-    },
+
+    generateTitle: false,
   },
 });
 
 export const agent = new Agent({
-  id: 'agent',
-  name: 'Agent',
+  id: "travel-assistant",
+
+  name: "Travel Assistant",
+
   description:
-    'A general-purpose assistant that can research, manage tasks, work with local files, run approved commands, and create recurring schedules.',
-  metadata: {
-    suggestedPrompts: [
-      "What's the weather in Austin this weekend?",
-      "What's the SPCX stock price right now?",
-      'Build a Japanese sakura festival landing page.',
-    ],
-  },
-  instructions: `You are a friendly starter agent for exploring what Mastra can do. Help the user try useful capabilities, build small projects, answer current questions, and shape this harness into a starting point for future work.
+    "A tool-enhanced travel assistant that can retrieve internal travel policies, provide flight and hotel booking information, convert supported currencies, and maintain conversation context.",
 
-Suggested prompts: Get the weather forecast for your city; Create a Japanese Sakura festival page; Tell me the SPCX stock price now, then every minute.
+  instructions: `
+You are a helpful internal travel assistant.
 
-When the user greets you or does not have a specific task, invite them to try the suggested prompts.
+Your responsibilities are:
 
-Ask concise questions when something is unclear or a good question could surface a useful insight.
+1. Help users with flight booking information.
+2. Help users with hotel booking information.
+3. Convert between supported currencies.
+4. Search the organization's internal knowledge base for travel, conference, hotel, flight, reimbursement, and company policy information.
+5. Maintain useful context across the conversation.
 
-For local file changes, end with a plain-text URL using ${pathToFileURL(`${workspacePath}/`).href}; avoid Markdown links, localhost, /workspace, relative paths, and static-file servers.
+Tool usage rules:
+
+- Use get_flight_booking when the user asks for flight booking information.
+- Use get_hotel_booking when the user asks for hotel accommodation or hotel cost information.
+- Use convert_currency when the user asks for currency conversion.
+- Use query_internal_knowledge when the user asks about company policies, travel policies, conference guidelines, reimbursement rules, hotel policies, flight policies, or other internal organizational information.
+
+When answering questions about internal policies, prioritize information returned by query_internal_knowledge.
+
+Do not invent company policies or booking details.
+
+If a tool reports that information is unsupported or unavailable, clearly explain that to the user.
+
+Keep responses clear, concise, and useful.
 `,
-  model: 'openai/gpt-5.6-terra',
-  defaultOptions: {
-    maxSteps: 100,
-    autoResumeSuspendedTools: true,
-  },
-  memory: new Memory({
-    options: {
-      generateTitle: true,
-      observationalMemory: {
-        model: 'openai/gpt-5-mini',
-      },
-    },
-  }),
-  workspace,
+
+  model,
+
+  memory,
+
   tools: {
-    ask_user: askUserTool,
-    start_schedule: startScheduleTool,
-    stop_schedule: stopScheduleTool,
-    web_fetch: webFetchTool,
-    web_search: webSearchTool,
+    get_flight_booking: getFlightBooking,
+    get_hotel_booking: getHotelBooking,
+    convert_currency: convertCurrency,
+    query_internal_knowledge: queryInternalKnowledge,
   },
-  signals: [new TaskSignalProvider()],
+
+  defaultOptions: {
+    maxSteps: 10,
+  },
 });
