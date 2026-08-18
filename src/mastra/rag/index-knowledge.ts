@@ -60,7 +60,7 @@ async function indexKnowledgeBase() {
   });
 
   // --------------------------------------------------
-  // Check existing indexes using public API
+  // Recreate vector index
   // --------------------------------------------------
 
   const indexes = await vectorStore.listIndexes();
@@ -69,21 +69,21 @@ async function indexKnowledgeBase() {
     (index) => index === INDEX_NAME,
   );
 
-  // --------------------------------------------------
-  // Create vector index if necessary
-  // --------------------------------------------------
+  if (indexExists) {
+    console.log("Deleting existing vector index...");
 
-  if (!indexExists) {
-    console.log("Creating vector index...");
-
-    await vectorStore.createIndex({
+    await vectorStore.deleteIndex({
       indexName: INDEX_NAME,
-      dimension: embeddings[0].length,
-      metric: "cosine",
     });
-  } else {
-    console.log("Existing vector index found.");
   }
+
+  console.log("Creating vector index...");
+
+  await vectorStore.createIndex({
+    indexName: INDEX_NAME,
+    dimension: embeddings[0].length,
+    metric: "cosine",
+  });
 
   // --------------------------------------------------
   // Store vectors

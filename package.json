@@ -8,7 +8,9 @@
   "dev": "mastra dev",
   "build": "mastra build",
   "start": "mastra start",
-  "cli": "tsx src/cli.ts"
+  "cli": "tsx src/cli.ts",
+  "rag:index": "tsx src/mastra/rag/index-knowledge.ts",
+  "rag:test": "tsx src/mastra/rag/search-knowledge.ts"
 },
   "keywords": [],
   "author": "",
