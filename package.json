@@ -5,13 +5,13 @@
   "main": "index.js",
   "private": true,
   "scripts": {
-  "dev": "mastra dev",
-  "build": "mastra build",
-  "start": "mastra start",
-  "cli": "tsx src/cli.ts",
-  "rag:index": "tsx src/mastra/rag/index-knowledge.ts",
-  "rag:test": "tsx src/mastra/rag/search-knowledge.ts"
-},
+    "dev": "mastra dev",
+    "build": "mastra build",
+    "start": "mastra start",
+    "cli": "tsx src/cli.ts",
+    "rag:index": "tsx src/mastra/rag/index-knowledge.ts",
+    "rag:test": "tsx src/mastra/rag/search-knowledge.ts"
+  },
   "keywords": [],
   "author": "",
   "license": "Apache-2.0",
@@ -35,6 +35,7 @@
   "devDependencies": {
     "@types/node": "latest",
     "mastra": "1.23.0",
+    "tsx": "^4.23.12",
     "typescript": "^6.0.3"
   }
 }

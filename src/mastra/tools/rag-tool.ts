@@ -1,13 +1,25 @@
 import "dotenv/config";
+import path from "node:path";
+import { fileURLToPath } from "node:url";
 
 import { LibSQLVector } from "@mastra/libsql";
 import { fastembed } from "@mastra/fastembed";
 import { createTool } from "@mastra/core/tools";
 import { z } from "zod";
 
-const VECTOR_DB_URL = process.env.KNOWLEDGE_DB_PATH
-  ? `file:${process.env.KNOWLEDGE_DB_PATH.replace(/\\/g, "/")}`
-  : "file:./knowledge.db";
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+const projectRoot = path.resolve(__dirname, "../../..");
+
+const configuredPath =
+  process.env.KNOWLEDGE_DB_PATH || "./knowledge.db";
+
+const knowledgeDbPath = path.isAbsolute(configuredPath)
+  ? configuredPath
+  : path.resolve(projectRoot, configuredPath);
+
+const VECTOR_DB_URL = `file:${knowledgeDbPath}`;
 
 const INDEX_NAME = "knowledge_base";
 
@@ -27,7 +39,10 @@ export const queryInternalKnowledge = createTool({
   }),
 
   execute: async ({ query }) => {
-        
+    //console.log("[RAG DEBUG] CWD:", process.cwd());
+    //console.log("[RAG DEBUG] DB path:", knowledgeDbPath);
+    //console.log("[RAG DEBUG] DB URL:", VECTOR_DB_URL);
+
     const vectorStore = new LibSQLVector({
       id: "knowledge-vector-store",
       url: VECTOR_DB_URL,
