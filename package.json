@@ -10,7 +10,8 @@
     "start": "mastra start",
     "cli": "tsx src/cli.ts",
     "rag:index": "tsx src/mastra/rag/index-knowledge.ts",
-    "rag:test": "tsx src/mastra/rag/search-knowledge.ts"
+    "rag:test": "tsx src/mastra/rag/search-knowledge.ts",
+    "setup:rag": "npm run rag:index"
   },
   "keywords": [],
   "author": "",
