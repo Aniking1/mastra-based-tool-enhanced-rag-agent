@@ -111,23 +111,25 @@ The indexing pipeline:
 4. Creates the `knowledge_base` vector index.
 5. Stores the vectors in `knowledge.db`.
 
-The generated `knowledge.db` file is not committed to Git, so a fresh clone must initialize the RAG database.
+The generated `knowledge.db` file is not committed to Git. On a fresh clone, `npm run cli` automatically initializes the RAG database when the `knowledge_base` vector index is not available.
 
-## IMPORTANT: Initialize RAG After Cloning
+## First-Time RAG Setup
+
+No separate RAG setup command is required for normal use.
 
 Run:
 
+    npm run cli
+
+On first run, the CLI checks whether the `knowledge_base` vector index exists. If it does not exist, the application automatically loads the documents from `data/`, generates embeddings, creates the vector index, and stores the vectors in `knowledge.db`.
+
+The CLI then starts normally.
+
+This makes the application suitable for a fresh clone and automated grading environment without requiring an additional setup command.
+
+For developers who want to manually rebuild the knowledge base, the following command is also available:
+
     npm run setup:rag
-
-This runs the RAG indexing process.
-
-A successful run ends with:
-
-    Knowledge base indexed successfully.
-
-The underlying indexing command is also available:
-
-    npm run rag:index
 
 ## Test the RAG Tool
 
@@ -339,15 +341,12 @@ A tutor or evaluator cloning the repository should use this order:
 1. Clone the repository.
 2. Run `npm install`.
 3. Configure `.env`.
-4. Run `npm run setup:rag`.
-5. Run `npm run rag:test -- "What is the company's policy on hotel accommodation?"`.
-6. Run `npm run dev`.
-7. Open `http://localhost:4111`.
-8. Select `Travel Assistant`.
-9. Test the RAG question.
-10. Test the flight, hotel, and currency tools.
+4. Run `npm run cli`.
+5. The CLI automatically initializes the RAG knowledge base if it does not already exist.
+6. Ask: "What is the company's policy on hotel accommodation?"
+7. Test the Flight, Hotel, and Currency tools.
 
-The RAG initialization step is essential because `knowledge.db` is a generated local database and is not stored in Git.
+The generated `knowledge.db` does not need to be committed to Git because the CLI automatically creates the knowledge base when required.
 
 ## Development Commands
 

@@ -5,7 +5,7 @@ import { loadKnowledgeDocuments } from "./knowledge-base";
 const VECTOR_DB_URL = "file:./knowledge.db";
 const INDEX_NAME = "knowledge_base";
 
-async function indexKnowledgeBase() {
+export async function indexKnowledgeBase() {
   console.log("Loading knowledge documents...");
 
   const documents = await loadKnowledgeDocuments();
@@ -103,7 +103,9 @@ async function indexKnowledgeBase() {
   console.log("Knowledge base indexed successfully.");
 }
 
-indexKnowledgeBase().catch((error) => {
-  console.error("Knowledge-base indexing failed:", error);
-  process.exit(1);
-});
+if (import.meta.url === `file://${process.argv[1]}`) {
+  indexKnowledgeBase().catch((error) => {
+    console.error("Knowledge-base indexing failed:", error);
+    process.exit(1);
+  });
+}
